@@ -13,6 +13,7 @@
 defined( 'ABSPATH' ) or die( 'Prohibido acceso directo.' );
 
 define('WC_MOBAPP_SHIPPING_BASE_PATH', dirname(__FILE__));
+define('WC_MOBAPP_SHIPPING_ID', 'mobapp_rate_state');
 
 add_action('woocommerce_shipping_init', function(){
 	if (!class_exists('WC_Request_MobApp_Shipping_Quote_Method_State')) {
@@ -29,7 +30,7 @@ if (!class_exists('Class_Setting_MobApp_Shipping_Method')) {
 
 add_filter('woocommerce_shipping_methods', 'add_request_shipping_quote');
 function add_request_shipping_quote( $methods ) {
-	$methods['mobapp_rate_state'] = 'WC_Request_MobApp_Shipping_Quote_Method_State';
+	$methods[WC_MOBAPP_SHIPPING_ID] = 'WC_Request_MobApp_Shipping_Quote_Method_State';
     return $methods;
 }
 
@@ -200,6 +201,25 @@ function arreglo_tarifa_por_peso($array=[]){
 	return $retorno;
 }
 
+function data_settings_rate_mobapp(){
+	$meta_data_method = [];
+	$zones = WC_Shipping_Zones::get_zones();
+	$methods = array_map(function($zone) {return $zone['shipping_methods'];}, $zones);
+	if(is_array($methods) && count($methods) > 0){
+		foreach($methods as $instance_id => $method) {
+			$id_method = isset($method[$instance_id]) ? $method[$instance_id] : '';
+			if($id_method !== ''){
+				$get_id_instance = $method[$instance_id]->id;
+				if($get_id_instance == WC_MOBAPP_SHIPPING_ID){
+					$meta_data_method[] = $method[$instance_id]->instance_settings;
+				}
+			}
+		}
+	}
+	$data = isset($meta_data_method[0]) ? $meta_data_method[0] : false;
+	return $data;
+}
+
 add_filter( 'woocommerce_package_rates', 'mobapp_packages_rates_cost', 10, 2 );
 function mobapp_packages_rates_cost( $rates, $package ) {
 	global $woocommerce;
@@ -210,6 +230,13 @@ function mobapp_packages_rates_cost( $rates, $package ) {
 	$api = get_transient( 'api_mobapp_response' );
 	
 	if ( false !== $api) {
+
+		/*******/
+
+		$mobapp_shipping_api_sources = json_decode(get_option( 'mobapp_shipping_api_sources', json_encode(array()) ),true);
+		$mobapp_shipping_api_sources = is_array($mobapp_shipping_api_sources) ? $mobapp_shipping_api_sources : array();
+
+		/*******/
 		
 		$gapi = is_array(json_decode($api,true)) ? json_decode($api,true) : array();
 		$provincia_usuario = isset( $state ) ? $state : WC()->customer->get_shipping_state();		
@@ -236,9 +263,16 @@ function mobapp_packages_rates_cost( $rates, $package ) {
 			$calc_tarifa = $kilos_excedente * $kg_extra;
 			$tarifa = $calc_tarifa + $tarifa;
 		}
+
+		#$shipping_zone = WC_Shipping_Zones::get_zone_matching_package();
+		#$methods = $shipping_zone->get_shipping_methods();
+		$zones = WC_Shipping_Zones::get_zones();
+		$methods = array_map(function($zone) {
+			return $zone['shipping_methods'];
+		}, $zones);
 		
 		foreach($rates as $rate){
-			if($rate->id == 'mobapp_rate_state'):
+			if($rate->id == WC_MOBAPP_SHIPPING_ID):
 			$option_key = 'woocommerce_' . $rate->method_id . '_' . $rate->instance_id . '_settings';
 			$settings = get_option($option_key);
 			
@@ -249,7 +283,7 @@ function mobapp_packages_rates_cost( $rates, $package ) {
 				$titulo_del_metodo = $mensaje_del_metodo;
 			}
 		
-			$rate->label = $titulo_del_metodo;
+			$rate->label = $titulo_del_metodo.'---'.$rate->label;
 			$rate->cost = $tarifa;
 				
 			endif;

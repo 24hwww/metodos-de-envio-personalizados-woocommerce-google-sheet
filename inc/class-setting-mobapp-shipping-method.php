@@ -31,7 +31,7 @@ class Class_Setting_MobApp_Shipping_Method{
 	public function estilos_personalizados_backend_wp_func() {
 		$section = isset($_GET['section']) ? esc_attr($_GET['section']) : '';
 		if($section !== $this->section_menu): return false; endif;
-		echo '<style type="text/css">#mobapp_shipping_api_sources{display:none;}.textarea-input{resize:none;width:100% !important;display:block;border-radius: 4px;border: 5px solid #8c8f94;}</style>';
+		echo '<style type="text/css">#mobapp_shipping_api_sources{display:none;}.textarea-input{resize:none;width:100% !important;display:block;border-radius: 4px;border: 1px solid #8c8f94;}</style>';
 	}
 	
 	public function custom_code_init_mobapp_shipping_footer_func(){
@@ -154,27 +154,29 @@ class Class_Setting_MobApp_Shipping_Method{
 	update_option( 'mobapp_shipping_enabled', 'yes');
 
 	$tr = '';
-	
-	for($t=0;$t < $gettr;$t++){
-	
-	$name = isset($mobapp_shipping_api_sources[$t]['name']) ? esc_html($mobapp_shipping_api_sources[$t]['name']) : '';
-	$url = isset($mobapp_shipping_api_sources[$t]['url']) ? esc_url($mobapp_shipping_api_sources[$t]['url']) : '';
-	$desc = isset($mobapp_shipping_api_sources[$t]['desc']) ? esc_html($mobapp_shipping_api_sources[$t]['desc']) : '';
-		
-	$tr .= '<tr>';
-	$tr .= '<td class="sort ui-sortable-handle" width="1%">';
-	#$tr .= $mobapp_shipping_api_sources;
-	$tr .= '<div class="wc-item-reorder-nav">';
-	$tr .= '<button type="button" class="wc-move-up wc-move-disabled" tabindex="-1" aria-hidden="true" aria-label="">Subir</button><button type="button" class="wc-move-down" tabindex="0" aria-hidden="false" aria-label="">Mover abajo</button>';
-	$tr .= '</div>';
-	$tr .= '</td>';
-	$tr .= '<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources['.$t.'][name]" value="'.$name.'" /></td>';
-	$tr .= '<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources['.$t.'][url]" value="'.$url.'" /></td>';
-	$tr .= '<td><textarea class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources['.$t.'][desc]">'.$desc.'</textarea></td>';
-	$tr .= '</tr>';
-		
+
+	foreach($mobapp_shipping_api_sources as $i => $v){
+		$name = isset($v['name']) ? esc_html($v['name']) : '';
+		$url = isset($v['url']) ? esc_url($v['url']) : '';
+		$desc = isset($v['desc']) ? esc_html($v['desc']) : '';
+
+		$tr .= '<tr>';
+		$tr .= '<td class="sort ui-sortable-handle" width="1%">';
+		$tr .= '<div class="wc-item-reorder-nav">';
+		$tr .= '<button type="button" class="wc-move-up wc-move-disabled" tabindex="-1" aria-hidden="true" aria-label="">Subir</button><button type="button" class="wc-move-down" tabindex="0" aria-hidden="false" aria-label="">Mover abajo</button>';
+		$tr .= '</div>';
+		$tr .= '</td>';
+
+		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources[%d][name]" value="%s" /></td>',$i,$name);
+
+		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources[%d][url]" value="%s" /></td>',$i,$url);
+
+		$tr .= sprintf('<td><textarea class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources[%d][desc]">%s</textarea></td>',$i,$desc);
+
+		$tr .= '</tr>';
+
 	}
-	
+		
 	$output['tr'] = $tr;
 	
 	wp_send_json_success($output);
@@ -237,6 +239,10 @@ class Class_Setting_MobApp_Shipping_Method{
 		
 		$array_json_api = is_array(json_decode($api,true)) ? count(json_decode($api,true)) : 0;
 			
+		echo '<pre>';
+		print_r( data_settings_rate_mobapp() );
+		echo '</pre>';
+
 	?>
 	
 	<?php if($array_json_api > 0): ?> 

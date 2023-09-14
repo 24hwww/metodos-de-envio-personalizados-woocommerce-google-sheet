@@ -1,7 +1,7 @@
 <?php
 class WC_Request_MobApp_Shipping_Quote_Method_State extends WC_Shipping_Method {
 public function __construct( $instance_id = 0) {
-$this->id = 'mobapp_rate_state';
+$this->id = WC_MOBAPP_SHIPPING_ID;
 $this->instance_id = absint( $instance_id );
 $this->domain = 'mobapp';
 $this->method_title = __( 'MobApp Urbano', $this->domain );
@@ -23,6 +23,12 @@ $this->info    = $this->get_option( 'info', $this->domain );
 add_action('woocommerce_update_options_shipping_' . $this->id, array($this, 'process_admin_options'));
 }
 function init_form_fields() {
+
+	$mobapp_shipping_api_sources = json_decode(get_option( 'mobapp_shipping_api_sources', json_encode(array()) ),true);
+	$mobapp_shipping_api_sources = is_array($mobapp_shipping_api_sources) ? $mobapp_shipping_api_sources : array();
+
+	$nombre_fuentes = array_column($mobapp_shipping_api_sources, 'name');
+
 $this->instance_form_fields = array(
 	'title' => array(
 		'type'          => 'text',
@@ -41,22 +47,33 @@ $this->instance_form_fields = array(
 		'title'         => __('Mensaje Kg excedente', $this->domain),
 		'description'   => __( 'Si el peso es excedente mostrar este mensaje.', $this->domain ),
 		'default'       => 'El costo para su envió debe ser cotizado.',
-	),		
+	),
+	'fuentes'    => array(
+		'title'             => __( 'Fuentes', $this->domain ),
+		'type'              => 'multiselect',
+		'class'             => 'chosen_select wc-enhanced-select',
+		'css'               => '',
+		'default'           => 0,
+		'options'           => $nombre_fuentes,
+		'custom_attributes' => array(
+			'data-placeholder' => __( 'Seleccionar fuente(s)', $this->domain ),
+		),
+	),	
 );
-$this->form_fields = array(
-'enabled' => array(
-'title'       => __( 'Activar', 'dc_raq' ),
-'type'        => 'checkbox',
-'description' => __( '', 'dc_raq' ),
-'default'     => 'yes'
-),
-'title' => array(
-'title'       => __( 'Titulo', 'dc_raq' ),
-'type'        => 'text',
-'description' => __( '', 'dc_raq' ),
-'default'     => __( 'Tarifa por Provincia', 'dc_raq' )
-),
-);
+	$this->form_fields = array(
+		'enabled' => array(
+		'title'       => __( 'Activar', 'dc_raq' ),
+		'type'        => 'checkbox',
+		'description' => __( '', 'dc_raq' ),
+		'default'     => 'yes'
+	),
+		'title' => array(
+		'title'       => __( 'Titulo', 'dc_raq' ),
+		'type'        => 'text',
+		'description' => __( '', 'dc_raq' ),
+		'default'     => __( 'Tarifa por Provincia', 'dc_raq' )
+	),
+	);
 }
 public function calculate_shipping( $packages = array() ) {
 global $woocommerce;
@@ -74,11 +91,18 @@ $zone_locations = $shipping_zone->get_zone_locations();
 $methods = $shipping_zone->get_shipping_methods();
 
 $limit_by_zone_locations = [];
+$fuentes = [];
+
 if(count($methods) > 0):
 foreach($methods as $instance_id => $method) {
 	$limit_by_zone_locations[] = isset($method->instance_settings['limit_by_zone_locations']) ? $method->instance_settings['limit_by_zone_locations'] : 'no';
+
+	$fuentes[] = isset($method->instance_settings['fuentes']) ? $method->instance_settings['fuentes'] : '';
+
 }
 endif;
+
+$fuentes = count($fuentes) > 0 ? $fuentes[0] : false;
 
 $available_mobapp = [];
 
@@ -98,14 +122,25 @@ if(count($available_mobapp) == 0): return false; endif;
 
 endif;
 
-//
+if($fuentes == false): return false; endif;
 
-$rate = array(
-'id'       => $this->id,
-'label'    => $this->title,
-'cost'     => '0',
-'calc_tax' => 'per_item'
-);
-$this->add_rate( $rate );
+	$mobapp_shipping_api_sources = json_decode(get_option( 'mobapp_shipping_api_sources', json_encode([]) ),true);
+	$mobapp_shipping_api_sources = is_array($mobapp_shipping_api_sources) ? $mobapp_shipping_api_sources : [];
+
+//	
+	foreach($fuentes as $index => $id_fuente){
+
+		$nombre_fuente = isset($mobapp_shipping_api_sources[$id_fuente]['name']) ? $mobapp_shipping_api_sources[$id_fuente]['name'] : '';
+
+		$rate = array(
+			'id'       => sprintf('%d_%d',$this->id,$id_fuente),
+			'label'    => sprintf('%s: %s', $nombre_fuente, $this->title),
+			'cost'     => '0',
+			'calc_tax' => 'per_item'
+		);
+		$this->add_rate( $rate );
+
+	}
+
 }
 }

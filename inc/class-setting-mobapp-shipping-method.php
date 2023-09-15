@@ -20,8 +20,8 @@ class Class_Setting_MobApp_Shipping_Method{
 		add_action('admin_head', [$instance,'estilos_personalizados_backend_wp_func']);
 		add_action('admin_footer', [$instance,'custom_code_init_mobapp_shipping_footer_func']);
 		
-		add_action( 'wp_ajax_render_tr_sources', [$instance,'render_tr_sources_func']);
-		add_action( 'wp_ajax_nopriv_render_tr_sources', [$instance,'render_tr_sources_func']);
+		#add_action( 'wp_ajax_render_tr_sources', [$instance,'render_tr_sources_func']);
+		#add_action( 'wp_ajax_nopriv_render_tr_sources', [$instance,'render_tr_sources_func']);
 
 		add_filter( 'woocommerce_get_sections_shipping', [$instance,'config_mobapp_add_section_func']);
 		
@@ -48,7 +48,7 @@ class Class_Setting_MobApp_Shipping_Method{
 	const displaysource = $('#display_sources');	
 	const jxadmin = '<?php echo admin_url( "admin-ajax.php" ); ?>';
 		
-	$.ajax({type : "GET",url : jxadmin,
+	/*$.ajax({type : "GET",url : jxadmin,
 	data : {action: 'render_tr_sources', gettr: 1, display: 'get_display_sources_tr'},
 				beforeSend: function() {
 					displaysource.block({message: null,overlayCSS: {background: "#fff",opacity: .6}});
@@ -62,12 +62,21 @@ class Class_Setting_MobApp_Shipping_Method{
 				   displaysource.html(tr);
 				   displaysource.unblock();
 			   }
-		   });
+		   });*/
 		
 	$(document).on('click', '.button-repeat-tr',  function(){
 		const tr = displaysource.find('tr');
 		const count_tr = tr.length;
-		$.ajax({type : "GET",url : jxadmin,
+		const num_tr = tr.length+1;
+
+		var $trLast = displaysource.find("tr:last");
+        var $trNew = $trLast.clone();
+		$trNew.find('input,textarea').attr('name', function(idx, attrVal) {
+        return attrVal;
+    	}).val('');
+		$trLast.after($trNew);
+
+		/*$.ajax({type : "GET",url : jxadmin,
 			   data : {
 				   action: 'render_tr_sources', 
 				   display: 'get_display_sources_tr',
@@ -80,7 +89,7 @@ class Class_Setting_MobApp_Shipping_Method{
 		  displaysource.html(tr);
 			displaysource.unblock();
 	   }
-	   });	
+	   });*/	
 	});
 		
 	$.fn.serializeObject = function(){var o = {};var a = this.serializeArray();$.each(a, function() {if (o[this.name]) {if (!o[this.name].push) {o[this.name] = [o[this.name]];}o[this.name].push(this.value || '');}else{o[this.name] = this.value || '';}});return o;};	
@@ -124,7 +133,7 @@ class Class_Setting_MobApp_Shipping_Method{
 	$mobapp_shipping_api_sources = json_decode(get_option( 'mobapp_shipping_api_sources', json_encode(array()) ),true);
 	$mobapp_shipping_api_sources = is_array($mobapp_shipping_api_sources) ? $mobapp_shipping_api_sources : array();
 	
-	$gettr = isset($_GET['gettr']) ? intval($_GET['gettr']) : count($mobapp_shipping_api_sources);
+	$num_row = isset($_GET['gettr']) ? intval($_GET['gettr']) : count($mobapp_shipping_api_sources);
 	
 	$formdata = isset($_POST['formdata']) ? $_POST['formdata'] : array();
 	
@@ -155,7 +164,9 @@ class Class_Setting_MobApp_Shipping_Method{
 
 	$tr = '';
 
-	foreach($mobapp_shipping_api_sources as $i => $v){
+	for($i=0;$i<=$num_row;$i++){
+		$v = isset($mobapp_shipping_api_sources[$i]) ? $mobapp_shipping_api_sources[$i] : [];
+	#foreach($mobapp_shipping_api_sources as $i => $v){
 		$name = isset($v['name']) ? esc_html($v['name']) : '';
 		$url = isset($v['url']) ? esc_url($v['url']) : '';
 		$desc = isset($v['desc']) ? esc_html($v['desc']) : '';
@@ -167,13 +178,15 @@ class Class_Setting_MobApp_Shipping_Method{
 		$tr .= '</div>';
 		$tr .= '</td>';
 
-		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources[%d][name]" value="%s" /></td>',$i,$name);
+		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources[name][]" value="%s" /></td>',$i,$name);
 
-		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources[%d][url]" value="%s" /></td>',$i,$url);
+		$tr .= sprintf('<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources[url][]" value="%s" /></td>',$i,$url);
 
-		$tr .= sprintf('<td><textarea class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources[%d][desc]">%s</textarea></td>',$i,$desc);
+		$tr .= sprintf('<td><textarea class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources[desc][]">%s</textarea></td>',$i,$desc);
 
 		$tr .= '</tr>';
+
+	#}
 
 	}
 		
@@ -203,7 +216,7 @@ class Class_Setting_MobApp_Shipping_Method{
 			
 			$settings_mobapp = array();
 
-			$settings_mobapp[] = array( 'name' => __( 'Configuraciones MobApp Urbano', 'wcmobapp' ), 'type' => 'title', 'desc' => __( 'Integración con metodos de envio via API personalizada.', 'wcmobapp' ), 'id' => 'wcmobapp' );
+			$settings_mobapp[] = array( 'name' => __( 'Configuraciones MobApp Urbano', 'wcmobapp' ), 'type' => 'title', 'desc' => __( 'Integración con metodos de envio via API personalizada para Argentina.', 'wcmobapp' ), 'id' => 'wcmobapp' );
 
 			$settings_mobapp[] = array(
 				'name'     => __( 'Activar funcionamiento', 'wcmobapp' ),
@@ -270,14 +283,14 @@ class Class_Setting_MobApp_Shipping_Method{
 							<button type="button" class="wc-move-up wc-move-disabled" tabindex="-1" aria-hidden="true" aria-label="">Subir</button><button type="button" class="wc-move-down" tabindex="0" aria-hidden="false" aria-label="">Mover abajo</button>
 							</div>
 							</td>
-							<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources[][name]" /></td>
-							<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources[][url]" /></td>
-							<td><input type="text" class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources[][desc]" /></td>
+							<td><input type="text" class="textarea-input" placeholder="Nombre" name="mobapp_shipping_api_sources[name][]" /></td>
+							<td><input type="text" class="textarea-input" placeholder="Url API CSV" name="mobapp_shipping_api_sources[url][]" /></td>
+							<td><input type="text" class="textarea-input" placeholder="Descripción" name="mobapp_shipping_api_sources[desc][]" /></td>
 						</tr>
 					</tbody>
 					<tfoot>
 						<tr>
-						<td colspan="4"><button type="button" class="button button-repeat-tr">Agregar mas fuentes</button>
+						<td colspan="4"><button type="button" class="button button-repeat-tr">+ Añadir fuente</button>
 						</td>
 						</tr>
 					</tfoot>

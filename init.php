@@ -87,7 +87,8 @@ function add_request_shipping_quote( $methods ) {
 
 add_action('init', 'get_api_response_mobapp_func');
 function get_api_response_mobapp_func() {
-	$mobapp_shipping_enabled = get_option( 'mobapp_shipping_enabled', 'no' );
+	if(is_admin()): return false; endif;
+	/*$mobapp_shipping_enabled = get_option( 'mobapp_shipping_enabled', 'no' );
 	if($mobapp_shipping_enabled !== 'yes'){return false;}
 	
 	$getjson = json_decode(get_option( 'mobapp_shipping_api_sources', json_encode([])),true);
@@ -135,7 +136,7 @@ function get_api_response_mobapp_func() {
 	}
 	
 	$array = array_filter($array);
-	unset($array[1]);/*//<!-- columna cabecera*/
+	unset($array[1]);
 	foreach($array as $krow => $vrow){
 
 		$provincia = $vrow[1];
@@ -158,7 +159,7 @@ function get_api_response_mobapp_func() {
 				);
 	}
 		set_transient( 'api_mobapp_response', json_encode($csv), 5*MINUTE_IN_SECONDS );
-	}
+	}*/
 }
 
 function arreglo_tarifa_por_peso($array=[]){
@@ -339,3 +340,108 @@ function debug_request_api_cart_func(){
 	}
 	echo '</pre>';
 }*/
+
+
+/********************* */
+
+add_filter( 'woocommerce_get_sections_shipping' , 'freeship_add_settings_tab' );
+function freeship_add_settings_tab( $settings_tab ){
+     $settings_tab['free_shipping_notices'] = __( 'Free Shipping Notices' );
+     return $settings_tab;
+}
+add_filter( 'woocommerce_get_settings_shipping' , 'freeship_get_settings' , 10, 2 );
+
+add_action( 'woocommerce_admin_field_button' , 'freeship_add_admin_field_button' );
+function freeship_add_admin_field_button( $value ){
+                $option_value = (array) WC_Admin_Settings::get_option( $value['id'] );
+                $description = WC_Admin_Settings::get_field_description( $value );
+                
+                ?>
+
+                <tr valign="top">
+                    <th scope="row" class="titledesc">
+                        <label for="<?php echo esc_attr( $value['id'] ); ?>"><?php echo esc_html( $value['title'] ); ?></label>
+                        <?php echo  $description['tooltip_html'];?>ffff
+                    </th>
+                    
+                    <td class="forminp forminp-<?php echo sanitize_title( $value['type'] ) ?>">
+                hjhjhj
+                         <input
+                                name ="<?php echo esc_attr( $value['name'] ); ?>"
+                                id   ="<?php echo esc_attr( $value['id'] ); ?>"
+                                type ="submit"
+                                style="<?php echo esc_attr( $value['css'] ); ?>"
+                                value="<?php echo esc_attr( $value['name'] ); ?>"
+                                class="<?php echo esc_attr( $value['class'] ); ?>"
+                        /> 
+						<input type="text" name="" value="22" />
+                        <?php echo $description['description']; ?>
+                       
+                    </td>
+                </tr>
+           <?php       
+}
+function freeship_get_settings( $settings, $current_section ) {
+	$custom_settings = array();
+	if( 'free_shipping_notices' == $current_section ) {
+		$custom_settings =  array(
+		array(
+			'name' => __( 'Free Shipping Notices' ),
+			'type' => 'title',
+			'desc' => __( 'Show the free shipping threshold to customers' ),
+			'id'   => 'free_shipping' 
+		),
+		array(
+			'name' => __( 'Enable Free shipping notices' ),
+			'type' => 'checkbox',
+			'desc' => __( 'Show the free shipping threshold on product page'),
+			'id'    => 'enable'
+		),
+		array(
+			'name' => __( 'Message' ),
+			'type' => 'text',
+			'desc' => __( 'Message to display on the notice'),
+			'desc_tip' => true,
+			'id'    => 'msg_threshold'
+		),
+		array(
+			'name' => __( 'Message when free shipping reached' ),
+			'type' => 'text',
+			'desc' => __( 'Message to display when free shipping is reached'),
+			'desc_tip' => true,
+			'id'    => 'msg_free'
+		),
+		array(
+			'name' => __( 'Position' ),
+			'type' => 'select',
+			'desc' => __( 'Position of the notice on the product page'),
+			'desc_tip' => true,
+			'id'    => 'position',
+			'options' => array(
+				 'top' => __( 'Top' ),
+				 'bottom' => __('Bottom')
+			)
+		),
+		array(
+			'name' => __( 'Activate' ),
+			'type' => 'button',
+			'desc' => __( 'Activate plugin'),
+			'desc_tip' => true,
+			'class' => 'button-secondary',
+			'id'    => 'activate',
+		),
+		
+		array(
+			'name' => __( 'Text Color' ),
+			'type' => 'color',
+			'desc' => __( 'Color of the text in the notice'),
+			'desc_tip' => true,
+			'id'    => 'color',
+		),
+		 array( 'type' => 'sectionend', 'id' => 'free_shipping' ),
+		 );
+return $custom_settings;
+ } else {
+	return $settings;
+ }
+}

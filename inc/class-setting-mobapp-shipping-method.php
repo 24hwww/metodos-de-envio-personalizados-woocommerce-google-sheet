@@ -26,6 +26,12 @@ class Class_Setting_MobApp_Shipping_Method{
 		add_filter( 'woocommerce_get_sections_shipping', [$instance,'config_mobapp_add_section_func']);
 		
 		add_filter( 'woocommerce_get_settings_shipping', [$instance,'config_mobapp_add_settings_func'], 10, 2 );
+
+		add_action( 'admin_notices', function () : void {
+			$errors = get_settings_errors();
+			print_r( $errors );
+		} );
+
 	}
 	
 	public function estilos_personalizados_backend_wp_func() {

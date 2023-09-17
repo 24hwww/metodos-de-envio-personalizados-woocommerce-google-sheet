@@ -30,24 +30,19 @@ class Config_MobApp_Shipping{
 
         add_action( 'woocommerce_admin_field_button' , [$instance,'config_mobapp_shipping_admin_field_func']);
 
-        add_action("woocommerce_update_options_{$instance->wc_settings_tab}",[$instance,'validate_field_option_func']);
+        #add_action("woocommerce_update_options_{$instance->wc_settings_tab}",[$instance,'validate_field_option_func']);
 
-		/*add_action( 'admin_notices', function () : void {
-			$errors = get_settings_errors();
-			print_r( $errors );
-		} );*/
-
-        add_filter( 'woocommerce_admin_settings_sanitize_option', [$instance,'woocommerce_admin_settings_sanitize_option_filter_func'], 10, 3 );
-
+        #add_filter( 'woocommerce_admin_settings_sanitize_option', [$instance,'woocommerce_admin_settings_sanitize_option_filter_func'], 10, 3 );
 
 	}
 	
     public function config_mobapp_shipping_section_func( $settings_tab ){
-        $settings_tab[$this->section_menu] = __( 'MobApp Urbano' );
+        $settings_tab[$this->section_menu] = WC_MOBAPP_SHIPPING_TITLE;
         return $settings_tab;
     }
 
     public function config_mobapp_shipping_settings_func($settings, $current_section){
+
         if($this->section_menu !== $current_section){return $settings;}
         /***********/
         $custom_settings = array();
@@ -77,6 +72,12 @@ class Config_MobApp_Shipping{
         );
 
         return $custom_settings;
+    }
+
+    public function get_ids_config_mobapp_shipping_settings(){
+        $fields = $this->config_mobapp_shipping_settings_func([],$this->section_menu);
+		$ids_fields = array_column($fields,'id');
+        return $ids_fields;
     }
 
     public function array_mobapp_shipping_sources(){
@@ -236,25 +237,10 @@ class Config_MobApp_Shipping{
 
         }else{
             return false;
-            WC_Admin_Settings::add_error( esc_html__( 'Ongeldige licentie sleutel!', 'restaurant-nybe' ) );
         }
 
     }
     
     public function woocommerce_admin_settings_sanitize_option_filter_func($value, $option, $raw_value){
-        if( $option == $this->fuentes ){
-            add_action( 'admin_notices', function() use($value) {
-                if($value == ""){
-                    echo '<div id="message" class="notice notice-error is-dismissible"><p>Option is required</p></div>';    
-                }
-            });
-        }
-       /* add_action( 'admin_notices', function() use($value) {
-            if($value == ""){
-                echo '<div id="message" class="notice notice-error is-dismissible"><p>Option is required</p></div>';    
-            }
-        });*/
-        
-
     }
 }

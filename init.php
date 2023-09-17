@@ -14,9 +14,12 @@
 
 defined( 'ABSPATH' ) or die( 'Prohibido acceso directo.' );
 
+if (!class_exists('mobapp_rate_state')) {
+
 define('WC_MOBAPP_SHIPPING_BASE_PATH', dirname(__FILE__));
 define('WC_MOBAPP_SHIPPING_ID', 'mobapp_rate_state');
 define('WC_MOBAPP_SHIPPING_SECTION', 'config-mobapp-shipping');
+define('WC_MOBAPP_SHIPPING_TITLE',  __( 'MobApp Urbano'));
 
 class mobapp_rate_state{
 	private static $instance = null;
@@ -34,12 +37,19 @@ class mobapp_rate_state{
 		$this->id = WC_MOBAPP_SHIPPING_ID;
 
 		add_action( 'admin_init', [$this,'if_check_plugin_dependency_func']);
+		register_deactivation_hook( __FILE__, [$this,'mobapp_rate_state_deactivate']);
 
+		/* Configuraciones Mobapp Urbano */
 		if (!class_exists('Config_MobApp_Shipping')) {
-		add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), [$this,'add_setting_link_plugin_func']);
-		require_once WC_MOBAPP_SHIPPING_BASE_PATH . '/inc/config-mobapp-shipping.php';
-		add_action( 'plugins_loaded', [ 'Config_MobApp_Shipping', 'init' ]);
+			add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), [$this,'add_setting_link_plugin_func']);
+			require_once WC_MOBAPP_SHIPPING_BASE_PATH . '/inc/config-mobapp-shipping.php';
+			add_action( 'plugins_loaded', [ 'Config_MobApp_Shipping', 'init' ]);
 		}
+		
+		/* Metodo Mobapp Urbano */
+		require_once WC_MOBAPP_SHIPPING_BASE_PATH . '/inc/metodo-mobapp-shipping.php';
+
+		add_action( 'admin_init', [$this,'init_mobapp_shipping_func']);
 
 	}
 
@@ -71,6 +81,51 @@ class mobapp_rate_state{
 		return $links;
 	}
 
+	public function mobapp_rate_state_deactivate(){
+		if (class_exists('Config_MobApp_Shipping')) {
+			$config_mobapp = new Config_MobApp_Shipping();
+
+			$settingOptions = $config_mobapp->get_ids_config_mobapp_shipping_settings();
+			if(is_array($settingOptions) && count($settingOptions) > 0){
+				foreach ($settingOptions as $settingName ) {
+					delete_option( $settingName );
+				}
+			}
+
+			flush_rewrite_rules();
+		}
+	}
+
+	public function init_mobapp_shipping_func(){
+		if ( class_exists( 'Config_MobApp_Shipping' ) ) {
+			function get_ids_config_mobapp_shipping(){
+				$config_mobapp = new Config_MobApp_Shipping();
+				$fields = $config_mobapp->config_mobapp_shipping_settings_func([],WC_MOBAPP_SHIPPING_SECTION);
+				$ids_fields = array_column($fields,'id');
+				return $ids_fields;
+			}
+			function get_config_mobapp_shipping(){
+				$output = [];
+				$config_mobapp = get_ids_config_mobapp_shipping();
+				if(is_array($config_mobapp) && count($config_mobapp) > 0){
+					foreach($config_mobapp as $name){
+						$value = WC_Admin_Settings::get_option($name);
+						if($value !== ''){
+						$output[$name] = WC_Admin_Settings::get_option($name);
+						}
+					}
+				}
+				return $output;
+			}
+			function activated_config_mobapp_shipping(){
+				$enabled = isset(get_config_mobapp_shipping()['mobapp_shipping_enable']) ? esc_attr(get_config_mobapp_shipping()['mobapp_shipping_enable']) : 'no';
+				return $enabled !== 'yes' ? false : true;
+			}
+		}		
+	}
+
 }
 
 $GLOBALS[WC_MOBAPP_SHIPPING_ID] = mobapp_rate_state::get_instance();
+
+}

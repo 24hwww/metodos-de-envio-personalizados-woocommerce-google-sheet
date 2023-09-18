@@ -140,7 +140,7 @@ if($fuentes == false): return false; endif;
 		);
 		$this->add_rate( $rate );
 
-	}
+	} 
 
 }
 }

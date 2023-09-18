@@ -132,9 +132,7 @@ add_action( 'woocommerce_shipping_init', function(){
                     (function($){
                         $(function($, undefined){
             
-                            
-                            $('select.multiselect').select2();
-            
+
                         });
                     })(jQuery);
                 });

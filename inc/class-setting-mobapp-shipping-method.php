@@ -54,22 +54,6 @@ class Class_Setting_MobApp_Shipping_Method{
 	const displaysource = $('#display_sources');	
 	const jxadmin = '<?php echo admin_url( "admin-ajax.php" ); ?>';
 		
-	/*$.ajax({type : "GET",url : jxadmin,
-	data : {action: 'render_tr_sources', gettr: 1, display: 'get_display_sources_tr'},
-				beforeSend: function() {
-					displaysource.block({message: null,overlayCSS: {background: "#fff",opacity: .6}});
-				},
-			   error: function(response){
-				   console.log(response);
-			   },
-			   success: function(resp) {
-				   console.log(resp);
-				   const tr = resp.data.tr;
-				   displaysource.html(tr);
-				   displaysource.unblock();
-			   }
-		   });*/
-		
 	$(document).on('click', '.button-repeat-tr',  function(){
 		const tr = displaysource.find('tr');
 		const count_tr = tr.length;
@@ -81,21 +65,6 @@ class Class_Setting_MobApp_Shipping_Method{
         return attrVal;
     	}).val('');
 		$trLast.after($trNew);
-
-		/*$.ajax({type : "GET",url : jxadmin,
-			   data : {
-				   action: 'render_tr_sources', 
-				   display: 'get_display_sources_tr',
-				   gettr: count_tr+1
-			   },
-		beforeSend: function(){displaysource.block({message: null,overlayCSS: {background: "#fff",opacity: .6}});},
-		error: function(response){console.log(response);},
-		success: function(resp){
-		  const tr = resp.data.tr;
-		  displaysource.html(tr);
-			displaysource.unblock();
-	   }
-	   });*/	
 	});
 		
 	$.fn.serializeObject = function(){var o = {};var a = this.serializeArray();$.each(a, function() {if (o[this.name]) {if (!o[this.name].push) {o[this.name] = [o[this.name]];}o[this.name].push(this.value || '');}else{o[this.name] = this.value || '';}});return o;};	

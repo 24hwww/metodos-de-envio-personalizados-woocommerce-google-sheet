@@ -89,9 +89,9 @@ class Config_MobApp_Shipping{
             foreach($fuentes as $key => $cadena){
                 if(!is_array($cadena)){ continue; }
                 foreach($cadena as $i => $v){
-                    #if($v !== ''){
+
                     $array[$i][$key] = $v;
-                   # }
+
                 }
             }
         }
@@ -107,10 +107,6 @@ class Config_MobApp_Shipping{
     $values = $this->array_mobapp_shipping_sources();
 
     settings_errors($this->fuentes);
-
-    echo '<pre>';
-    print_r($values);
-    echo '</pre>';
 
     ?>
     <style>
@@ -131,7 +127,7 @@ class Config_MobApp_Shipping{
 					<thead>
 						<tr>
 							<th class="sort"></th>
-							<th class="name">Nombre de Metodo</th>
+							<th class="name">Nombre de metodo <abbr title="Debe colocar un nombre a la fuente.">*</abbr></th>
 							<th class="source">Fuente</th>
 							<th class="description">Descripción</th>
 						</tr>

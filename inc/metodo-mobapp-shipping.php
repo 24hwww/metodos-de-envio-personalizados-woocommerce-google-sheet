@@ -44,13 +44,22 @@ add_action( 'woocommerce_shipping_init', function(){
                 add_filter('woocommerce_generate_custom_html',[$this,'woocommerce_generate_custom_html_func'],10,3);
             }
 
+            public function get_fuentes_mobapp_rate_state(){
+                $config = new Config_MobApp_Shipping();
+                $return = $config->array_mobapp_shipping_sources();
+                return $return;
+            }
+
             public function init_form_fields() {
 
                 $url_config = add_query_arg( array(
                     'page' => 'wc-settings',
                     'tab' => 'shipping',
                     'section' => WC_MOBAPP_SHIPPING_SECTION
-                ), admin_url( 'admin.php' ) );           
+                ), admin_url( 'admin.php' ) );
+
+                $get_fuentes_mobapp_rate_state = $this->get_fuentes_mobapp_rate_state();
+                $fuentes = array_column($get_fuentes_mobapp_rate_state,'name');
 
                 $this->init_settings();
                 $this->instance_form_fields = array(
@@ -59,7 +68,7 @@ add_action( 'woocommerce_shipping_init', function(){
                         'title'         => __('Titulo', ''),
                         'desc_tip' => true,
                         'description'   => __( 'Este metodo funciona en el calculo de envió cuando el usuario indica la región o estado o provincia. ', '' ),
-                        'default'       => __( 'Tarifa por Provincia', '' ),
+                        'default'       => __( 'Tarifa por provincia de Argentina', '' ),
                     ),
                     'limit_by_zone_locations' => array(
                         'type'          => 'checkbox',
@@ -80,7 +89,7 @@ add_action( 'woocommerce_shipping_init', function(){
                         'type'              => 'multiselect',
                         'class'			=> 'chosen_select wc-enhanced-select',
                         'default'           => 0,
-                        'options'           => WC()->countries->get_shipping_countries(),
+                        'options'           => $fuentes,
                         'custom_attributes' => array(
                             'data-placeholder' => __( 'Seleccionar fuente(s)', '' ),
                         ),
@@ -105,7 +114,7 @@ add_action( 'woocommerce_shipping_init', function(){
                         'title'       => __( 'Titulo', '' ),
                         'type'        => 'text',
                         'description' => __( '', '' ),
-                        'default'     => __( 'Tarifa por Provincia', '' )
+                        'default'     => __( 'Tarifa por provincia de Argentina', '' )
                     ),
                 );
                 

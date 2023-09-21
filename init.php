@@ -124,6 +124,53 @@ class mobapp_rate_state{
 		}		
 	}
 
+	public function get_data_metodos($metodo_id=''){
+		$zones = WC_Shipping_Zones::get_zones();
+		$z = [];
+		$array = [];
+		
+		if(is_array($zones) && count($zones) > 0){
+			foreach($zones as $raw_zone){
+				
+				$z[] = new WC_Shipping_Zone($raw_zone['id']);
+				
+			}
+		}
+		
+		if(is_array($z) && count($z) > 0){
+			$n=0;
+			foreach ($z as $zone) {
+				$zone_id = $zone->get_id();
+				$zone_name = $zone->get_zone_name();
+				$zone_order = $zone->get_zone_order();
+				$zone_locations = $zone->get_zone_locations();
+				$zone_formatted_location = $zone->get_formatted_location();
+				$zone_shipping_methods = $zone->get_shipping_methods(true);
+				
+				
+				if(is_array($zone_shipping_methods) && count($zone_shipping_methods) > 0){
+					foreach ( $zone_shipping_methods as $index => $method ) {
+						
+						$array[$n][$method->id] = [];
+						$method_instance_id = $method->get_instance_id();
+						
+						if(is_array($zone_locations) && count($zone_locations) > 0){
+						foreach($zone_locations as $zl){
+							$array[$n][$method->id]['location'][] = $zl->code;
+						}
+						}
+						
+						$data[$zone_id][] = get_option( 'woocommerce_' . $method->id . '_' . $method_instance_id . '_settings' ); 
+							$array[$n][$method->id]['data'] = array_filter($data[$zone_id]);
+					}
+				}
+				
+				$n++;
+			}
+		}
+		return $array;
+	}
+
 }
 
 $GLOBALS[WC_MOBAPP_SHIPPING_ID] = mobapp_rate_state::get_instance();

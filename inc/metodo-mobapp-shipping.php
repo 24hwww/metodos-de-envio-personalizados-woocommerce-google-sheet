@@ -124,9 +124,89 @@ add_action( 'woocommerce_shipping_init', function(){
                 return parent::get_instance_form_fields();
             }
 
+            public function fuentes_por_zonas($code_country_state=''){
+                if (class_exists('mobapp_rate_state')) {
+	
+                    $output = [];
+                    $x= new Config_MobApp_Shipping();
+                    $y = new mobapp_rate_state();
+                    
+                    $metodos = is_array($y->get_data_metodos()) ? $y->get_data_metodos() : [];
+                    $fuentes = $x->array_mobapp_shipping_sources();
+                    
+                    $output = array_column($metodos,WC_MOBAPP_SHIPPING_ID);
+                    $data = array_column($output,'data');
+                    
+                    
+                    if(is_array($metodos) && count($metodos) > 0){
+                        foreach($metodos as $d1 => $d2){
+                            $mobapp_rate_state = isset($d2[WC_MOBAPP_SHIPPING_ID]) ? $d2[WC_MOBAPP_SHIPPING_ID] : '';
+                            if($mobapp_rate_state !== ''){
+                                $datos[$d1] = $mobapp_rate_state;
+                                foreach($mobapp_rate_state as $d2 => $d3){
+                                    
+                                    $datos[$d1][$d2] = $d3;
+                                    if($d2 == 'data'){
+                                        foreach($d3 as $d4 => $d5){
+                                            
+                                            $datos[$d1][$d2][$d4] = $d5;
+                                            foreach($d5 as $d6 => $d7){
+                                                
+                                                $datos[$d1][$d2][$d4][$d6] = $d7;
+                                                if($d6 == 'fuentes'){
+                                                    foreach($d7 as $d8 => $d9){
+                                                        
+                                                        $datos[$d1][$d2][$d4][$d6][$d8] = isset($fuentes[$d9]) ? $fuentes[$d9] : [];
+                                                        
+                                                    }
+                                                }
+                                            
+                                            }
+                                            
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                
+                    return $datos;
+                    
+                }	
+            }
+
+            public function get_peso_total($package = array()){
+                /* Peso (kg): total de productos en carrito */
+                $items = is_array($package['contents']) ? $package['contents'] : [];
+                $total_weight = 0;
+                if(count($items) > 0){
+                    foreach ($items as $item_id => $item ) {
+                        $product = isset($item['data']) ? $item['data'] : '';
+                        $weight = $product->get_weight();
+                        $total_weight += $weight;
+                    }
+                }
+                return $total_weight;
+            }
+
 			public function calculate_shipping( $package = array() ) {
+
+                $country = isset($package["destination"]["country"]) ? $package["destination"]["country"] : '';
+                $state = isset($package["destination"]["state"]) ? $package["destination"]["state"] : '';
+
+                $code_country_state = sprintf('%s:%s',$country,$state);
+
+                $pesos_total = $this->get_peso_total($package);
+
+                $shipping_zone = WC_Shipping_Zones::get_zone_matching_package( $package );
+
+                $fuentes_por_zonas = $this->fuentes_por_zonas($code_country_state);
+
+                $debug = json_encode($pesos_total,JSON_PRETTY_PRINT);
+
 				$rate = array(
-					'label' => $this->title,
+					'label' => $this->title .'--'. $debug,
 					'cost' => '10.99',
 					'calc_tax' => 'per_item'
 				);

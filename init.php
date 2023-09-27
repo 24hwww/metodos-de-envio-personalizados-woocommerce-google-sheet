@@ -20,6 +20,7 @@ define('WC_MOBAPP_SHIPPING_BASE_PATH', dirname(__FILE__));
 define('WC_MOBAPP_SHIPPING_ID', 'mobapp_rate_state');
 define('WC_MOBAPP_SHIPPING_SECTION', 'config-mobapp-shipping');
 define('WC_MOBAPP_SHIPPING_TITLE',  __( 'MobApp Urbano'));
+define('WC_MOBAPP_SHIPPING_COUNTRY_DEFAULT',  'AR');
 
 class mobapp_rate_state{
 	private static $instance = null;
@@ -161,7 +162,8 @@ class mobapp_rate_state{
 						}
 						
 						$data[$zone_id][] = get_option( 'woocommerce_' . $method->id . '_' . $method_instance_id . '_settings' ); 
-							$array[$n][$method->id]['data'] = array_filter($data[$zone_id]);
+						$array[$n][$method->id]['data'] = array_filter($data[$zone_id]);
+					
 					}
 				}
 				

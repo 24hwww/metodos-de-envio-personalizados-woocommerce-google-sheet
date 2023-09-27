@@ -192,6 +192,8 @@ class Config_MobApp_Shipping{
 	    </table>
 
         <p class="description"><strong>Ejemplo de Fuente (CSV):</strong><br/><code>https://docs.google.com/spreadsheets/d/e/2PACX-1vTb7mxeY65ALDoMJJbERSp38L452M275qRaLkCPMIF7SNK1l6Wn5hTvCMRYiVDwvU4GlyT5lSYlgAd5/pub?gid=1490307897&amp;single=true&amp;output=csv</code></p>
+
+        <?php do_action('after_fuentes_mobapp_shipping_rate'); ?>
             
         </td>
     </tr>
